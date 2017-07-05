@@ -1,0 +1,63 @@
+#!/usr/bin/perl -w
+#
+# filename encoding converter by Bán Miklós at 2008.03.16
+
+$FROM = 'latin1'; #CP852 #LATIN1 LATIN2
+$TO = 'utf8';
+
+if ($ARGV[1]) {
+	$FROM = $ARGV[1];
+}
+
+if ($ARGV[2]) {
+	$TO = $ARGV[2];
+}
+
+#--------------------------------------
+# main -----------------
+
+if (@ARGV == 0) { @list = `ls`; }
+else 
+{ 
+  @list = ();
+  @plist = `ls`;
+  for ($i=0;$i<@plist;$i++)
+  {
+    foreach $n (@ARGV) 
+    {
+      if ( $plist[$i] =~ /$n/) { push (@list, $plist[$i]); }
+    }
+  }
+}
+
+open(HANDLE,">.erename_tmp_list");
+foreach $file (@list) 
+{
+  printf( HANDLE "%s", $file );
+}
+close HANDLE;
+
+@elist = `iconv -f $FROM --to-code $TO//TRANSLIT .erename_tmp_list`;
+
+foreach $e (@elist) { print $e; }
+print "\nIf the list above looks like you would get as result press enter
+if not, press enter and I'm very sorry...\n";
+my $choice = <STDIN>;
+chomp($choice);
+if ($choice !~ /^$/) { print "\nNothing happend\n"; exit; }
+
+for ($i=0;$i<@list;$i++) 
+{
+  chop ($list[$i]);
+  chop ($elist[$i]);
+
+  if ($list[$i] ne $elist[$i]) 
+  {
+    rename($list[$i],$elist[$i]);
+  }
+}
+unlink '.erename_tmp_list';
+
+system ('ls');
+print "\nDone\n";
+
